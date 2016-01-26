@@ -6,23 +6,21 @@ import _pwalign
 from ..pairwisealignment import PairwiseAlignment
 
 
-def pw_global_align(seqs, sub_matrix, gap_penalty):
+def pw_global_align(seq1, seq2, sub_matrix, gap_penalty):
 	"""
 	Find pairwise global alignment of two sequences through Hirschberg's
 	algorithm.
 
 	Args:
-		seqs: 2-tuple. Sequences of (byte) characters.
-		sub_matrix: SubstitutionMatrix.
-		gap_penalty: int|tuple. Either a 2-tuple of ints representing gap open
-			and extend penalties, or a single int for both.
+		seq1: sequence of arbitrary objects.
+		seq2: sequence of arbitrary objects.
+		sub_matrix: SubstitutionMatrix with symbols matching sequences.
+		gap_penalty: float|tuple. Either a 2-tuple of float representing gap
+			open and extend penalties, or a single float for both.
 
 	Returns:
 		PairwiseAlignment
 	"""
-
-	# Parse arguments
-	seq1, seq2 = seqs
 
 	try:
 		gap_open_penalty, gap_extend_penalty = gap_penalty
