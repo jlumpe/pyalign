@@ -12,7 +12,8 @@ npy_float max(npy_float val1, npy_float val2)
 
 npy_intp gotohAlign(npy_ubyte *seqA, npy_intp lenA,
                     npy_ubyte *seqB, npy_intp lenB,
-                    struct PairwiseScoringMethod *sm, seq_edit *tbOut)
+                    struct PairwiseScoringMethod *sm, seq_edit *tbOut,
+                    npy_float *scoreOut)
 {
 	seq_edit *editMatrix;
 	size_t matSize;
@@ -25,7 +26,7 @@ npy_intp gotohAlign(npy_ubyte *seqA, npy_intp lenA,
 
 	memset(editMatrix, 0, matSize);
 
-	fillEditMatrix(seqA, lenA, seqB, lenB, sm, editMatrix);
+	fillEditMatrix(seqA, lenA, seqB, lenB, sm, editMatrix, scoreOut);
 
 	// Now do the backtracking
 	return makeTraceback(seqA, lenA, seqB, lenB, sm, editMatrix, tbOut);
@@ -35,7 +36,7 @@ npy_intp gotohAlign(npy_ubyte *seqA, npy_intp lenA,
 void fillEditMatrix(npy_ubyte *seqA, npy_intp lenA,
                     npy_ubyte *seqB, npy_intp lenB,
                     struct PairwiseScoringMethod *sm,
-                    seq_edit *editMatrix)
+                    seq_edit *editMatrix, npy_float *scoreOut)
 {
 	npy_intp m, n, i;
 	npy_ubyte charA, charB;
@@ -112,6 +113,10 @@ void fillEditMatrix(npy_ubyte *seqA, npy_intp lenA,
 			pRow[n] = pCurrent;
 		}
 	}
+
+	// Output final score
+	if(scoreOut != NULL)
+		*scoreOut = sRow[lenB - 1];
 }
 
 

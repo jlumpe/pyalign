@@ -41,11 +41,11 @@ def pw_global_align(seq1, seq2, sub_matrix, gap_penalty):
 	seq2_array = _seq_to_array(seq2, symbol_map)
 
 	# Run native algorithm to do the actual work
-	gaps = _pwalign.pwalign(seq1_array, seq2_array, matrix,
+	gaps, score = _pwalign.pwalign(seq1_array, seq2_array, matrix,
 		gap_open_penalty, gap_extend_penalty)
 
 	# Return PairwiseAlignment object
-	return PairwiseAlignment((seq1, seq2), gaps.astype(np.bool))
+	return PairwiseAlignment((seq1, seq2), gaps.astype(np.bool)), score
 
 
 def _seq_to_array(seq, symbol_map):

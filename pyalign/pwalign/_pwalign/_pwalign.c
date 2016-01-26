@@ -50,6 +50,7 @@ static PyObject *pwalign_pwalign(PyObject *self, PyObject *args)
 	npy_intp lenA, lenB;
 	struct PairwiseScoringMethod sm;
 	npy_intp tbLen;
+	npy_float alignScore;
 	PyArrayObject *gapArray;
 
 	// Parse input tuple
@@ -73,7 +74,7 @@ static PyObject *pwalign_pwalign(PyObject *self, PyObject *args)
 
 	// Run the alignment algorithm and get a traceback array
 	seq_edit traceback[lenA + lenB];
-	tbLen = gotohAlign(seqA, lenA, seqB, lenB, &sm, traceback);
+	tbLen = gotohAlign(seqA, lenA, seqB, lenB, &sm, traceback, &alignScore);
 
 	// Check if alignment successful, if so create gap array
 	if(tbLen != -1)
@@ -108,7 +109,8 @@ static PyObject *pwalign_pwalign(PyObject *self, PyObject *args)
 	// Build and return output tuple
 	if(gapArray != NULL)
 	{
-		PyObject *ret = Py_BuildValue("O", gapArray);
+		float alignScoreFloat = (float)alignScore;
+		PyObject *ret = Py_BuildValue("Of", gapArray, alignScoreFloat);
 		return ret;
 	}
 	else

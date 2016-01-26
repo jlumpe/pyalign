@@ -73,11 +73,14 @@ struct PairwiseScoringMethod {
  * @param {seq_edit*} tbOut Pointer to array of sequence edits of length
  *                             (lenA + lenB) that the traceback will be
  *                             written to.
+ * @param {npy_float*} scoreOut Pointer to npy_float, if not NULL will be
+ *                              assigned the score of the alignment.
  * @returns {npy_inpt} Length of traceback, or -1 on error.
  */
 npy_intp gotohAlign(npy_ubyte *seqA, npy_intp lenA,
                     npy_ubyte *seqB, npy_intp lenB,
-                    struct PairwiseScoringMethod *sm, seq_edit *tbOut);
+                    struct PairwiseScoringMethod *sm, seq_edit *tbOut,
+                    npy_float *scoreOut);
 
 
 /**
@@ -93,11 +96,13 @@ npy_intp gotohAlign(npy_ubyte *seqA, npy_intp lenA,
  *                               seq_edit of size lenA * lenB that will be
  *                               filled in with edit values. Should be
  *                               initially all 0.
+ * @param {npy_float*} scoreOut Pointer to npy_float, if not NULL will be
+ *                              assigned the score of the alignment.
  */
 void fillEditMatrix(npy_ubyte *seqA, npy_intp lenA,
                     npy_ubyte *seqB, npy_intp lenB,
                     struct PairwiseScoringMethod *sm,
-                    seq_edit *editMatrix);
+                    seq_edit *editMatrix, npy_float *scoreOut);
 
 
 /**
