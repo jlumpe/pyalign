@@ -21,6 +21,7 @@ def pw_global_align(seq1, seq2, sub_matrix, gap_penalty):
 	Returns:
 		PairwiseAlignment
 	"""
+	assert len(sub_matrix.symbols) < 256
 
 	try:
 		gap_open_penalty, gap_extend_penalty = gap_penalty
@@ -33,7 +34,8 @@ def pw_global_align(seq1, seq2, sub_matrix, gap_penalty):
 	ns = len(symbol_map)
 
 	# Create matrix, zero index corresponds to symbol not in passed matrix
-	matrix = np.zeros((256, 256), dtype=np.float32)
+	# The C function uses a constant-sized 256x256 matrix
+	matrix = np.full((256, 256), sub_matrix.missing_score, dtype=np.float32)
 	matrix[1:(ns + 1), 1:(ns + 1)] = sub_matrix.matrix
 
 	# Convert to numpy unit8 arrays

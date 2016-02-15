@@ -10,8 +10,8 @@ from scipy.linalg import eig
 from .substitutionmatrix import SubstitutionMatrix, aa_symbols
 
 
-# Matrix from the original paper in 1/10,000ths, re-ordered so that the
-# amino acid codes are in alphabetical order (as defined in this sub-package).
+# Mutability matrix from the original paper in 1/10,000ths, re-ordered so that
+# the AA codes are in alphabetical order (as defined in this sub-package).
 # Note this is a LEFT stochastic matrix, all columns sum to 1.
 # (Except they don't, I assume the values have been rounded in the original
 # paper to the nearest 10,000th. Normalize by column sums.)
@@ -36,7 +36,7 @@ dayhoff_matrix = np.asarray([
 	[13,3,1,2,1,3,3,57,1,11,17,1,3,2,2,2,10,9901,0,2],
 	[0,0,0,0,1,0,0,0,0,0,0,0,0,0,2,1,0,0,9976,1],
 	[1,3,0,1,21,0,4,1,0,1,0,3,0,0,0,1,1,1,2,9945]
-], dtype=np.float32)
+], dtype=np.float64)
 dayhoff_matrix /= dayhoff_matrix.sum(axis=0, keepdims=True)
 
 # Find the stationary vector of the Dayhoff matrix. This corresponds to the
@@ -44,20 +44,24 @@ dayhoff_matrix /= dayhoff_matrix.sum(axis=0, keepdims=True)
 # 1 due to so-and-so's theorem or whatever). Use scipy's eig() function
 # instead of numpy's, as it seems to be more stable. Note that it returns a
 # matrix with eigenvectors in columns, normalized under L2 norm.
-_dayhoff_eigvals, _dayhoff_eigvecs = eig(dayhoff_matrix)
-dayhoff_stationary = _dayhoff_eigvecs[:, np.argmax(_dayhoff_eigvals)].copy()
+dayhoff_eigvals, dayhoff_eigvecs = eig(dayhoff_matrix)
+assert not np.any(np.iscomplex(dayhoff_eigvecs))
+assert not np.any(np.iscomplex(dayhoff_eigvals))
+dayhoff_stationary = dayhoff_eigvecs[:, np.argmax(dayhoff_eigvals)]\
+	.astype(np.float64)
 dayhoff_stationary /= dayhoff_stationary.sum()
 
 
-def pam_matrix(n, scale=np.log(2)/2, as_ints=False):
+def pam_matrix(d, scale=float(np.log(2)/2), as_ints=False):
 	"""Creates PAM scoring matrix.
 
-	Values calculated from (natural) log-odds ratio of PAM{n}:PAM{inf}. The
+	Values calculated from (natural) log-odds ratio of PAM{d}:PAM{inf}. The
 	output will be this matrix *divided* by the scale parameter (this seems
 	to be the convention, but I am not sure why).
 
 	Args:
-		n: int. Number of time steps in the Markov chain model.
+		d: int. Mutation distance (number of time steps in the Markov chain
+			model).
 		scale: float. Units of returned matrix, relative to "natural" units
 			of the log-odds ration. Returned matrix will be the log-odds
 			values *divided* by the scale. Defaults to ln(2)/2 (half-bit
@@ -65,11 +69,11 @@ def pam_matrix(n, scale=np.log(2)/2, as_ints=False):
 		as_ints: bool. If true, entries will be rounded to the nearest integer.
 	"""
 	# Calculate matrix
-	dayhoff_n = matrix_power(dayhoff_matrix, n)
+	dayhoff_n = matrix_power(dayhoff_matrix, d)
 	matrix = np.log(dayhoff_n / dayhoff_stationary[:, None]) / scale
 
 	# Doesn't seem to be completely symmetrical, hopefully just due to
-	# 	floating-point errors. Fudge it a bit.
+	# floating-point errors. Fudge it a bit.
 	matrix += matrix.transpose()
 	matrix *= .5
 
@@ -77,4 +81,4 @@ def pam_matrix(n, scale=np.log(2)/2, as_ints=False):
 	if as_ints:
 		matrix = np.round(matrix)
 
-	return SubstitutionMatrix(aa_symbols, matrix)
+	return SubstitutionMatrix(aa_symbols, matrix.astype(np.float32))
