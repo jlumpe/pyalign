@@ -10,12 +10,15 @@ from substitutionmatrix import *
 from pam import pam_matrix
 
 
+# Load directory of saved matrices
 with resource_stream(__name__, 'matrices.pickle') as stream:
 	unpickler = Unpickler(stream)
-	matrices = unpickler.load()
+	matrix_attrs = unpickler.load()
+matrix_list = matrix_attrs.keys()
 
 
 def load_matrix(name):
+	"""Loads a precalculated matrix"""
 	with resource_stream(__name__ + '.matrices', name + '.pickle') as stream:
 		unpickler = Unpickler(stream)
 		return unpickler.load()

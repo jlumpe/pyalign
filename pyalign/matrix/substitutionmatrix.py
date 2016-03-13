@@ -17,6 +17,19 @@ aa_symbols = list('ACDEFGHIKLMNPQRSTVWY')
 aa_symbols_ext = list('ARNDCQEGHILKMFPSTWYVBZX*')
 
 
+def matrix_colormap(*matrices, **kwargs):
+	"""Creates a matplotlib color map for one or more substitution matrices.
+
+	Matices passed as *args in numpy.ndarray format.
+	"""
+	from matplotlib import pyplot as plt
+
+	base_map = kwargs.get('base_map', plt.get_cmap('RdYlBu'))
+
+	vmin = kwargs.get('vmin', min(np.min(m) for m in matrices))
+	vmax = kwargs.get('vmax', max(np.max(m) for m in matrices))
+
+
 class SubstitutionMatrix(object):
 	"""
 	Represents a substitution/scoring matrix for scoring alignments.

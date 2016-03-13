@@ -82,3 +82,86 @@ def pam_matrix(d, scale=float(np.log(2)/2), as_ints=False):
 		matrix = np.round(matrix)
 
 	return SubstitutionMatrix(aa_symbols, matrix.astype(np.float32))
+
+
+
+def map_symbols(matrix, old_symbols, new_symbols):
+	map_ = tuple(old_symbols.index(s) for s in new_symbols)
+	return matrix[map_, :][:, map_]
+
+
+def compare_pam():
+	"""Loads all NCBI PAM matrices and compare's against pyalign's method"""
+	from pyalign.matrix import matrix_attrs, load_matrix
+
+	matrices = []
+
+	# Check all matrices
+	for name, attrs in matrix_attrs.iteritems():
+		# Find PAM matrices
+		try:
+			if attrs['type'] != 'PAM':
+				continue
+			dist = attrs['dist']
+			scale = attrs['scale']
+		except KeyError:
+			continue
+
+		# Load NCBI matrix
+		ncbi_matrix = load_matrix(name)
+
+
+		# Load NCBI matrix
+		ncbi_matrix = load_matrix(name)
+
+		# Create pyalign matrix
+		pyalign_matrix = pam_matrix(dist, scale=scale)
+
+		# Get values in same order
+		pyalign_values = pyalign_matrix.values
+		index_map = [ncbi_matrix.symbols.index(s) for s in pyalign_matrix.symbols]
+		ncbi_values = ncbi_matrix.values[index_map, :][:, index_map]
+
+		matrices.append(dict(
+			name=name,
+			dist=dist,
+			scale=scale,
+			ncbi_values=ncbi_values,
+			pyalign_values=pyalign_values
+		))
+
+	return matrices
+
+
+def test_pam():
+	"""Test PAM matrices calculated by my method vs those from NCBI"""
+	import pandas as pd
+
+	# Rows of table to return
+	rows = []
+	names = []
+
+	# Check all matrices
+	for comp in compare_pam():
+
+		# Get difference
+		diff = np.abs(comp['ncbi_values'] - comp['pyalign_values'])
+
+		# Add row
+		names.append(comp['name'])
+		rows.append(dict(
+			dist=comp['dist'],
+			scale=comp['scale'],
+			meandiff=np.mean(diff),
+			mindiff=np.min(diff),
+			maxdiff=np.max(diff),
+			nround=np.sum(diff > .5)
+		))
+
+	table = pd.DataFrame(rows, index=names, columns=['dist', 'scale',
+		'meandiff', 'mindiff', 'maxdiff', 'nround'])
+
+	table.sort_values(['dist', 'scale'], inplace=True)
+
+	return table
+
